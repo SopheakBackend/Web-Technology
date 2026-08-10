@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ResetPasswordNotification extends Notification
+class ResetPasswordNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     private $token;
@@ -37,15 +37,19 @@ class ResetPasswordNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        $resetUrl = route('set.new-password', [
-            'token' => $this->token,
-            'email' => $notifiable->email,
-        ]);
+        // $resetUrl = route('set.new-password', [
+        //     'token' => $this->token,
+        //     'email' => $notifiable->email,
+        // ]);
+            $resetUrl = env('APP_URL', 'http://localhost:8000') . '/api/set-new-password?' . http_build_query([
+                'token' => $this->token,
+                'email' => $notifiable->email,
+            ]);
 
         return (new MailMessage)
             ->subject('Reset Your Password')
             ->line('Click the button below to set your new password.')
             ->action('Set New Password', $this->callback_url . '?forwarded-url=' . urlencode($resetUrl))
-            ->line($resetUrl);
+            ->line('If you did not request a password reset, no further action is required.');
     }
 }
